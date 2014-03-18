@@ -1,7 +1,7 @@
 // © 2014 Steve McCoy.
 
 /*
-Package table is used to decode CSV streams into arbitrary structs.
+Package table is used to decode CSV-like streams into arbitrary structs.
 
 For example:
 
@@ -17,7 +17,7 @@ For example:
 		if err := dec.Decode(&x); err == io.EOF {
 			break
 		} else if err != nil {
-			fmt.Fprintf(os.Stderr, "oops:", err)
+			fmt.Fprintln(os.Stderr, "oops:", err)
 			return
 		}
 		fmt.Println(x.A, x.B, x.c)
@@ -30,6 +30,10 @@ import (
 	"strconv"
 )
 
+// RowError is returned from Decode when the number of fields in a row
+// does not equal the number of exported fields in the destination struct.
+// If there are more row fields than struct fields, MissingField will contain
+// the name of the next available field.
 type RowError struct {
 	RowLen int
 	StructLen int
@@ -45,25 +49,44 @@ func (r RowError) Error() string {
 	return msg
 }
 
+// DecodeError is returned from Decode if a field is of a Kind that
+// does not have an associated function in Modify.
 type DecodeError string
 
 func (d DecodeError) Error() string {
 	return string(d) + " is not decodable"
 }
 
+// FieldReader represents anything that behaves similar to
+// encoding/csv's Reader type. Any errors encoundered
+// by the reader will be immediately returned by Decode.
 type FieldReader interface {
 	Read() ([]string, error)
 }
 
+// Decoder contains a map of functions from reflect.Kinds to 
+// functions that should set a *reflect.Value of the associated Kind
+// with the value represented by a provided string.
 type Decoder struct {
 	Modify map[reflect.Kind]func(*reflect.Value, string)error
 	r FieldReader
 }
 
+// NewDecoder returns a Decoder that reads from r and has a default
+// Modify map that can set values for bool, int types, float types, and strings.
 func NewDecoder(r FieldReader) Decoder {
 	return Decoder{defaultMods, r}
 }
 
+// Decode sets the exported fields of the struct s with the values
+// represented by the fields in the next row provided by d's FieldReader.
+// Fields are parsed and set using the functions in d.Modify.
+//
+// Any errors from Read are returned immediately.
+// If s is not a pointer to a struct, Decode returns nil and *s is not modified.
+// A DecodeError is returned for the first field whose Kind has
+// no entry in d.Modify. A RowError is returned when the row has too many
+// or too few fields for s.
 func (d *Decoder) Decode(s interface{}) error {
 	fields, err := d.r.Read()
 	if err != nil {
@@ -71,22 +94,23 @@ func (d *Decoder) Decode(s interface{}) error {
 	}
 
 	t := reflect.TypeOf(s)
-	if t == nil || t.Kind() != reflect.Struct {
+	if t == nil || (t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct) {
 		return nil
 	}
+	t = t.Elem()
 
-	val := reflect.ValueOf(s)
+	val := reflect.ValueOf(s).Elem()
 
 	j := 0 // j is the index of val's field i in the fields slice
 	for i := 0; i < t.NumField(); i++ {
-		if j >= len(fields) {
-			return RowError{ len(fields), j, t.Field(i).Name }
-		}
-
 		f := t.Field(i)
 		fv := val.Field(i)
 		if !fv.CanSet() {
 			continue
+		}
+
+		if j >= len(fields) {
+			return RowError{ len(fields), j, t.Field(i).Name }
 		}
 
 		m, ok := d.Modify[f.Type.Kind()]
