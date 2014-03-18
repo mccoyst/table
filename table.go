@@ -30,6 +30,27 @@ import (
 	"strconv"
 )
 
+type RowError struct {
+	RowLen int
+	StructLen int
+	MissingField string
+}
+
+func (r RowError) Error() string {
+	msg := "row mismatch: row length = " + strconv.Itoa(r.RowLen) +
+		", but struct length = " + strconv.Itoa(r.StructLen)
+	if r.MissingField != "" {
+		msg += " (field " + r.MissingField + ")"
+	}
+	return msg
+}
+
+type DecodeError string
+
+func (d DecodeError) Error() string {
+	return string(d) + " is not decodable"
+}
+
 type FieldReader interface {
 	Read() ([]string, error)
 }
@@ -59,7 +80,7 @@ func (d *Decoder) Decode(s interface{}) error {
 	j := 0 // j is the index of val's field i in the fields slice
 	for i := 0; i < t.NumField(); i++ {
 		if j >= len(fields) {
-			panic("row too short")
+			return RowError{ len(fields), j, t.Field(i).Name }
 		}
 
 		f := t.Field(i)
@@ -70,14 +91,14 @@ func (d *Decoder) Decode(s interface{}) error {
 
 		m, ok := d.Modify[f.Type.Kind()]
 		if !ok {
-			panic(f.Type.Kind().String() + " is not decodable")
+			return DecodeError(f.Type.Kind().String())
 		}
 		m(&fv, fields[j])
 		j++
 	}
 
 	if j < len(fields) {
-		panic("row too long")
+		return RowError{ len(fields), j, "" }
 	}
 
 	return nil
