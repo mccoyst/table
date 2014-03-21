@@ -94,7 +94,7 @@ func (d *Decoder) Decode(s interface{}) error {
 	}
 
 	t := reflect.TypeOf(s)
-	if t == nil || (t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct) {
+	if t == nil || t.Kind() != reflect.Ptr || t.Elem().Kind() != reflect.Struct {
 		return nil
 	}
 	t = t.Elem()

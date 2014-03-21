@@ -8,6 +8,7 @@ import (
 	"encoding/csv"
 	"os"
 	"strings"
+	"testing"
 )
 
 func ExampleDecoder_Decode() {
@@ -36,4 +37,21 @@ func ExampleDecoder_Decode() {
 	// output: 1 blonde 0
 	// 2 on 0
 	// 3 blonde 0
+}
+
+func TestDecodeNonstruct(t *testing.T) {
+	lines := `
+1,blonde
+2,on
+3,blonde
+`
+	dec := NewDecoder(csv.NewReader(strings.NewReader(lines)))
+	var x int
+	err := dec.Decode(&x)
+	if err != nil {
+		t.Error("Expected no error, got", err)
+	}
+	if x != 0 {
+		t.Error("Something touched x:", x)
+	}
 }
