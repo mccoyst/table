@@ -57,7 +57,7 @@ func (d DecodeError) Error() string {
 	return string(d) + " is not decodable"
 }
 
-// FieldReader represents anything that behaves similar to
+// FieldReader represents anything that behaves similarly to
 // encoding/csv's Reader type. Any errors encoundered
 // by the reader will be immediately returned by Decode.
 type FieldReader interface {
