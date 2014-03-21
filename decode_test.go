@@ -142,6 +142,8 @@ func TestDecodeError(t *testing.T) {
 		t.Error("Expected a DecodeError, got", err)
 	} else if de != "complex64" {
 		t.Error("Expected the error to be on complex64, got", de)
+	} else if de.Error() != "complex64 is not decodable" {
+		t.Error("Unexpected de.Error():", de.Error())
 	}
 }
 
