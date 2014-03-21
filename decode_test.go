@@ -88,3 +88,37 @@ func TestShortRow(t *testing.T) {
 		t.Error("Expected a RowError, got", err)
 	}
 }
+
+func TestLongRow(t *testing.T) {
+	type X struct {
+		A int
+		B string
+		c int
+	}
+	lines := `
+1,blonde,6
+2,on,6
+3,blonde,6
+`
+
+	dec := NewDecoder(csv.NewReader(strings.NewReader(lines)))
+	var x X
+	err := dec.Decode(&x)
+	if err == nil {
+		t.Error("Expected an error", x)
+	}
+	if re, ok := err.(RowError); ok {
+		if re.RowLen != 3 {
+			t.Error("Expected RowLen of 3, got", re.RowLen)
+		}
+		if re.StructLen != 2 {
+			t.Error("Expected StructLen of 2, got", re.StructLen)
+		}
+		if re.MissingField != "" {
+			t.Error("Expected empty MissingField, got", re.MissingField)
+		}
+	} else {
+		t.Error("Expected a RowError, got", err)
+	}
+}
+

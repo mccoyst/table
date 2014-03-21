@@ -122,7 +122,7 @@ func (d *Decoder) Decode(s interface{}) error {
 	}
 
 	if j < len(fields) {
-		return RowError{ len(fields), j+1, "" }
+		return RowError{ len(fields), j, "" }
 	}
 
 	return nil
