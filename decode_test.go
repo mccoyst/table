@@ -144,3 +144,76 @@ func TestDecodeError(t *testing.T) {
 		t.Error("Expected the error to be on complex64, got", de)
 	}
 }
+
+func TestVariousParses(t *testing.T) {
+	type X struct {
+		A int
+		B string
+		C uint
+		D int8
+		E int16
+		F int32
+		G int64
+		H uint8
+		I uint16
+		J uint32
+		K uint64
+		L float32
+		M float64
+		N bool
+	}
+	lines := `
+-1,meow,2,3,4,5,6,7,8,9,10,11.1,12.6,true
+`
+	dec := NewDecoder(csv.NewReader(strings.NewReader(lines)))
+	for {
+		var x X
+		if err := dec.Decode(&x); err == io.EOF {
+			break
+		} else if err != nil {
+			t.Fatal("Expected no error, got", err)
+		}
+		if x.A != -1 {
+			t.Error("Expected A to be -1, got", x.A)
+		}
+		if x.B != "meow" {
+			t.Error("Expected B to be meow, got", x.B)
+		}
+		if x.C != 2 {
+			t.Error("Expected C to be 2, got", x.C)
+		}
+		if x.D != 3 {
+			t.Error("Expected D to be 3, got", x.D)
+		}
+		if x.E != 4 {
+			t.Error("Expected E to be 4, got", x.E)
+		}
+		if x.F != 5 {
+			t.Error("Expected F to be 5, got", x.F)
+		}
+		if x.G != 6 {
+			t.Error("Expected G to be 6, got", x.G)
+		}
+		if x.H != 7 {
+			t.Error("Expected H to be 7, got", x.H)
+		}
+		if x.I != 8 {
+			t.Error("Expected I to be 8, got", x.I)
+		}
+		if x.J != 9 {
+			t.Error("Expected J to be 9, got", x.J)
+		}
+		if x.K != 10 {
+			t.Error("Expected K to be 10, got", x.K)
+		}
+		if x.L != 11.1 {
+			t.Error("Expected L to be 11, got", x.L)
+		}
+		if x.M != 12.6 {
+			t.Error("Expected M to be 12, got", x.M)
+		}
+		if !x.N {
+			t.Error("Expected N to be true, got", x.N)
+		}
+	}
+}
