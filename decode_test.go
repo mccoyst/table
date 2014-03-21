@@ -122,3 +122,25 @@ func TestLongRow(t *testing.T) {
 	}
 }
 
+func TestDecodeError(t *testing.T) {
+	type X struct {
+		A int
+		B complex64
+	}
+	lines := `
+1,blonde
+2,on
+3,blonde
+`
+	dec := NewDecoder(csv.NewReader(strings.NewReader(lines)))
+	var x X
+	err := dec.Decode(&x)
+	if err == nil {
+		t.Error("Expected an error")
+	}
+	if de, ok := err.(DecodeError); !ok {
+		t.Error("Expected a DecodeError, got", err)
+	} else if de != "complex64" {
+		t.Error("Expected the error to be on complex64, got", de)
+	}
+}
