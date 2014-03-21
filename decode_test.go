@@ -84,6 +84,9 @@ func TestShortRow(t *testing.T) {
 		if re.MissingField != "C" {
 			t.Error("Expected MissingField of C, got", re.MissingField)
 		}
+		if re.Error() != "row mismatch: row length = 2, but struct length = 3 (field C)" {
+			t.Error("Unexpected re.Error():", re.Error())
+		}
 	} else {
 		t.Error("Expected a RowError, got", err)
 	}
@@ -116,6 +119,9 @@ func TestLongRow(t *testing.T) {
 		}
 		if re.MissingField != "" {
 			t.Error("Expected empty MissingField, got", re.MissingField)
+		}
+		if re.Error() != "row mismatch: row length = 3, but struct length = 2" {
+			t.Error("Unexpected re.Error():", re.Error())
 		}
 	} else {
 		t.Error("Expected a RowError, got", err)
