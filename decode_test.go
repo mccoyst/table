@@ -55,3 +55,36 @@ func TestDecodeNonstruct(t *testing.T) {
 		t.Error("Something touched x:", x)
 	}
 }
+
+func TestShortRow(t *testing.T) {
+	type X struct {
+		A int
+		B string
+		C int
+	}
+	lines := `
+1,blonde
+2,on
+3,blonde
+`
+
+	dec := NewDecoder(csv.NewReader(strings.NewReader(lines)))
+	var x X
+	err := dec.Decode(&x)
+	if err == nil {
+		t.Error("Expected an error", x)
+	}
+	if re, ok := err.(RowError); ok {
+		if re.RowLen != 2 {
+			t.Error("Expected RowLen of 2, got", re.RowLen)
+		}
+		if re.StructLen != 3 {
+			t.Error("Expected StructLen of 3, got", re.StructLen)
+		}
+		if re.MissingField != "C" {
+			t.Error("Expected MissingField of C, got", re.MissingField)
+		}
+	} else {
+		t.Error("Expected a RowError, got", err)
+	}
+}

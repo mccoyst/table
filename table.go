@@ -110,7 +110,7 @@ func (d *Decoder) Decode(s interface{}) error {
 		}
 
 		if j >= len(fields) {
-			return RowError{ len(fields), j, t.Field(i).Name }
+			return RowError{ len(fields), j+1, t.Field(i).Name }
 		}
 
 		m, ok := d.Modify[f.Type.Kind()]
@@ -122,7 +122,7 @@ func (d *Decoder) Decode(s interface{}) error {
 	}
 
 	if j < len(fields) {
-		return RowError{ len(fields), j, "" }
+		return RowError{ len(fields), j+1, "" }
 	}
 
 	return nil
